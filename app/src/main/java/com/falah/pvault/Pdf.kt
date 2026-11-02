@@ -17,7 +17,7 @@ import com.tom_roush.pdfbox.multipdf.LayerUtility
 import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
-import com.tom_roush.pdfbox.util.Matrix
+import com.tom_roush.pdfbox.util.Matrix as PdfMatrix
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import java.io.File
@@ -156,7 +156,7 @@ fun mergePdfs(ctx: Context, items: List<Triple<File, String, String>>, out: File
                 dest.addPage(np)
                 PDPageContentStream(dest, np).use { cs ->
                     cs.saveGraphicsState()
-                    cs.transform(Matrix(s, 0f, 0f, s, tx, ty))
+                    cs.transform(PdfMatrix(s, 0f, 0f, s, tx, ty))
                     cs.drawForm(form)
                     cs.restoreGraphicsState()
                 }
