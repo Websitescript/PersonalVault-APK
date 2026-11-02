@@ -1,6 +1,0 @@
-<resources>
-    <string name="sc_scan">Scan</string>
-    <string name="sc_scan_long">Scan a document</string>
-    <string name="sc_add">Add</string>
-    <string name="sc_add_long">Add a document</string>
-</resources>
