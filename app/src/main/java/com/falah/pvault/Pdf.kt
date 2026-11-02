@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import androidx.exifinterface.media.ExifInterface
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.multipdf.PDFMergerUtility
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import java.io.File
@@ -108,4 +109,31 @@ fun imageToPdf(ctx: Context, uri: Uri, out: File) {
     pdf.finishPage(page)
     out.outputStream().use { pdf.writeTo(it) }
     pdf.close()
+}
+
+/** Merges PDFs (in the given order) into [out]. Returns null on success, or an error message. */
+fun mergePdfs(ctx: Context, items: List<Triple<File, String, String>>, out: File): String? {
+    PDFBoxResourceLoader.init(ctx.applicationContext)
+    val opened = mutableListOf<PDDocument>()
+    val dest = PDDocument()
+    var current = ""
+    try {
+        val merger = PDFMergerUtility()
+        for ((file, pw, title) in items) {
+            current = title
+            val d = PDDocument.load(file, pw)
+            d.setAllSecurityToBeRemoved(true)
+            opened.add(d)
+            merger.appendDocument(dest, d)
+        }
+        dest.save(out)
+        return null
+    } catch (e: InvalidPasswordException) {
+        return "“$current” is password-protected. Open it once and enter its password, then try again."
+    } catch (e: Throwable) {
+        return "Couldn't merge these documents."
+    } finally {
+        opened.forEach { try { it.close() } catch (e: Exception) { } }
+        try { dest.close() } catch (e: Exception) { }
+    }
 }

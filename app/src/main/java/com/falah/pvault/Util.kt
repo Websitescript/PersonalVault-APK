@@ -121,3 +121,16 @@ fun pinShortcut(ctx: Context, d: Doc) {
         Toast.makeText(ctx, "Couldn't create the shortcut", Toast.LENGTH_SHORT).show()
     }
 }
+
+fun shareCacheFile(ctx: Context, f: File, title: String) {
+    try {
+        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", f)
+        val i = Intent(Intent.ACTION_SEND).setType("application/pdf")
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        i.clipData = ClipData.newRawUri("", uri)
+        ctx.startActivity(Intent.createChooser(i, "Share $title"))
+    } catch (e: Exception) {
+        Toast.makeText(ctx, "Couldn't share the file", Toast.LENGTH_SHORT).show()
+    }
+}

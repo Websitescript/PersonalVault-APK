@@ -97,6 +97,7 @@ fun DocCard(
     doc: Doc,
     modifier: Modifier = Modifier,
     reveal: Boolean = false,
+    badge: Int? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null
 ) {
@@ -135,7 +136,17 @@ fun DocCard(
                 doc.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, style = ts,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
             )
-            if (doc.title != doc.typeLabel) {
+            if (badge != null) {
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    Modifier.size(28.dp).clip(CircleShape)
+                        .background(if (badge > 0) Color.White else Color.Transparent)
+                        .border(2.dp, Color.White, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (badge > 0) Text(badge.toString(), color = Color(0xFF111111), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+            } else if (doc.title != doc.typeLabel) {
                 Spacer(Modifier.width(8.dp))
                 Text(doc.typeLabel, color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, style = ts, maxLines = 1)
             }

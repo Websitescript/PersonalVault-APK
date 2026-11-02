@@ -59,7 +59,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlin.math.abs
 
 @Composable
-private fun StackCard(d: Doc, i: Int, selected: String?, t: Float, onTap: () -> Unit, onLong: () -> Unit) {
+private fun StackCard(d: Doc, i: Int, selected: String?, t: Float, onTap: () -> Unit, onLong: () -> Unit, badge: Int? = null) {
     var appeared by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { appeared = true }
     val enter by animateFloatAsState(
@@ -81,6 +81,7 @@ private fun StackCard(d: Doc, i: Int, selected: String?, t: Float, onTap: () -> 
                 rotationX = if (isSel) -8f * t else 0f
                 alpha = enter * (if (isSel) 1f else 1f - t)
             },
+        badge = badge,
         onClick = onTap,
         onLongClick = onLong
     )
@@ -133,6 +134,9 @@ fun HomeScreen(vm: VaultVM) {
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var reveal by remember { mutableStateOf<Doc?>(null) }
+    val ctx = LocalContext.current
+    var mergeMode by remember { mutableStateOf(false) }
+    val picked = remember { mutableStateListOf<String>() }
     val focus = remember { FocusRequester() }
     val t by animateFloatAsState(if (selected != null) 1f else 0f, tween(380, easing = FastOutSlowInEasing), label = "select")
     LaunchedEffect(selected) {
@@ -141,6 +145,7 @@ fun HomeScreen(vm: VaultVM) {
     }
     LaunchedEffect(searching) { if (searching) focus.requestFocus() }
     BackHandler2(searching) { searching = false; query = "" }
+    BackHandler2(mergeMode) { mergeMode = false; picked.clear() }
 
     val list = vm.docs.filter { matches(it, query) }
 
@@ -159,16 +164,19 @@ fun HomeScreen(vm: VaultVM) {
                             ),
                             modifier = Modifier.fillMaxWidth().focusRequester(focus)
                         )
-                    } else Text("Personal Vault", fontWeight = FontWeight.Bold)
+                    } else if (mergeMode) Text("Select documents", fontWeight = FontWeight.Bold)
+                    else Text("Personal Vault", fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
                     if (searching) IconButton({ searching = false; query = "" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Close search") }
+                    else if (mergeMode) IconButton({ mergeMode = false; picked.clear() }) { Icon(Icons.Default.Close, "Cancel") }
                 },
                 colors = transparentBar(),
                 actions = {
                     if (searching) {
                         if (query.isNotEmpty()) IconButton({ query = "" }) { Icon(Icons.Default.Close, "Clear") }
-                    } else {
+                    } else if (!mergeMode) {
+                        if (vm.docs.size > 1) IconButton({ mergeMode = true; picked.clear() }) { Icon(Icons.Default.MergeType, "Merge and share") }
                         if (vm.docs.isNotEmpty()) IconButton({ searching = true }) { Icon(Icons.Default.Search, "Search") }
                         if (vm.docs.size > 1) IconButton({ vm.screen = Screen.Reorder }) { Icon(Icons.Default.SwapVert, "Rearrange") }
                         IconButton({ vm.screen = Screen.Settings }) { Icon(Icons.Default.Settings, "Settings") }
@@ -176,8 +184,35 @@ fun HomeScreen(vm: VaultVM) {
                 }
             )
         },
+        bottomBar = {
+            if (mergeMode) {
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, tonalElevation = 3.dp) {
+                    Row(
+                        Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TextButton({ mergeMode = false; picked.clear() }) { Text("Cancel") }
+                        Button(
+                            onClick = {
+                                vm.mergeAndShare(picked.toList()) { f, name ->
+                                    shareCacheFile(ctx, f, name)
+                                    mergeMode = false
+                                    picked.clear()
+                                }
+                            },
+                            enabled = picked.size >= 2 && !vm.merging,
+                            modifier = Modifier.weight(1f).height(48.dp)
+                        ) {
+                            if (vm.merging) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                            else Text(if (picked.size < 2) "Pick at least 2" else "Merge & share (${picked.size})")
+                        }
+                    }
+                }
+            }
+        },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (!mergeMode) ExtendedFloatingActionButton(
                 onClick = { vm.screen = Screen.Form(null) },
                 icon = { Icon(Icons.Default.Add, null) },
                 text = { Text("Add document") }
@@ -205,8 +240,13 @@ fun HomeScreen(vm: VaultVM) {
                         key(d.id) {
                             StackCard(
                                 d, i, selected, t,
-                                onTap = { if (selected == null) selected = d.id },
-                                onLong = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); reveal = d }
+                                onTap = {
+                                    if (mergeMode) {
+                                        if (d.id in picked) picked.remove(d.id) else picked.add(d.id)
+                                    } else if (selected == null) selected = d.id
+                                },
+                                onLong = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); reveal = d },
+                                badge = if (mergeMode) picked.indexOf(d.id) + 1 else null
                             )
                         }
                     }

@@ -223,6 +223,7 @@ class VaultVM(app: Application) : AndroidViewModel(app) {
     val shareQueue = mutableStateListOf<Shared>()
     var screen by mutableStateOf<Screen>(Screen.Home)
     var autoScan by mutableStateOf(false)
+    var merging by mutableStateOf(false)
     var themeMode by mutableIntStateOf(prefs.getInt("theme", 0))
         private set
     var blockShots by mutableStateOf(prefs.getBoolean("secure", false))
@@ -231,7 +232,10 @@ class VaultVM(app: Application) : AndroidViewModel(app) {
     init {
         docs.addAll(repo.load())
         val l = docs.toList()
-        viewModelScope.launch(Dispatchers.IO) { publishShortcuts(app, l) }
+        viewModelScope.launch(Dispatchers.IO) {
+            publishShortcuts(app, l)
+            File(app.cacheDir, "share").listFiles()?.forEach { it.delete() }
+        }
     }
 
     private fun toast(s: String) = Toast.makeText(getApplication(), s, Toast.LENGTH_SHORT).show()
@@ -343,6 +347,27 @@ class VaultVM(app: Application) : AndroidViewModel(app) {
         if (from !in docs.indices || to !in docs.indices) return
         docs.add(to, docs.removeAt(from))
         persist()
+    }
+
+    /** Merges the chosen cards into one temporary PDF for sharing. Nothing is stored in the app. */
+    fun mergeAndShare(ids: List<String>, onReady: (File, String) -> Unit) {
+        val items = ids.mapNotNull { id -> docs.firstOrNull { it.id == id } }
+        if (items.size < 2 || merging) return
+        viewModelScope.launch {
+            merging = true
+            val app = getApplication<Application>()
+            val name = items.joinToString(" + ") { it.title }
+                .replace(Regex("[^A-Za-z0-9 _+-]"), "").trim().take(50).ifEmpty { "Merged documents" }
+            val out = File(app.cacheDir, "share").apply { mkdirs() }.let { dir ->
+                dir.listFiles()?.forEach { it.delete() }
+                File(dir, "$name.pdf")
+            }
+            val err = withContext(Dispatchers.IO) {
+                mergePdfs(app, items.map { Triple(repo.file(it), it.password, it.title) }, out)
+            }
+            merging = false
+            if (err != null) toast(err) else onReady(out, name)
+        }
     }
 
     fun exportBackup(uri: Uri) {
