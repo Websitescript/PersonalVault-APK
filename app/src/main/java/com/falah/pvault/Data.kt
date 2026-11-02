@@ -228,8 +228,6 @@ class VaultVM(app: Application) : AndroidViewModel(app) {
         private set
     var blockShots by mutableStateOf(prefs.getBoolean("secure", false))
         private set
-    var tiltDeg by mutableIntStateOf(prefs.getInt("tilt", 0))
-        private set
 
     init {
         docs.addAll(repo.load())
@@ -245,7 +243,6 @@ class VaultVM(app: Application) : AndroidViewModel(app) {
     fun fileOf(d: Doc): File = repo.file(d)
 
     fun updateTheme(m: Int) { themeMode = m; prefs.edit().putInt("theme", m).apply() }
-    fun updateTilt(d: Int) { tiltDeg = d; prefs.edit().putInt("tilt", d).apply() }
     fun updateBlockShots(b: Boolean) { blockShots = b; prefs.edit().putBoolean("secure", b).apply() }
 
     private fun persist() {

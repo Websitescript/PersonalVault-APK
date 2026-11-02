@@ -124,18 +124,6 @@ fun SettingsScreen(vm: VaultVM) {
                 }
             }
 
-            SectionTitle("Card stack tilt")
-            Text(
-                if (vm.tiltDeg == 0) "Off – cards sit flat" else "Tilt from the bottom: ${vm.tiltDeg}°",
-                fontWeight = FontWeight.Medium
-            )
-            Slider(
-                value = vm.tiltDeg.toFloat(),
-                onValueChange = { vm.updateTilt(it.toInt()) },
-                valueRange = 0f..30f
-            )
-            Text("Leans the home card stack back from its bottom edge for a deeper 3D look.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
             SectionTitle("Privacy")
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -161,7 +149,7 @@ fun SettingsScreen(vm: VaultVM) {
             Text("Restoring adds missing documents; it never deletes or overwrites the ones you already have.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             SectionTitle("About")
-            Text("Personal Vault V1.4", fontWeight = FontWeight.Medium)
+            Text("Personal Vault V1.5", fontWeight = FontWeight.Medium)
             Text(
                 "Documents are stored only on this phone, in the app's private storage. Share a PDF or photo from WhatsApp or Files to this app to add it quickly.",
                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant

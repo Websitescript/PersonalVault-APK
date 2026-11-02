@@ -235,14 +235,7 @@ fun HomeScreen(vm: VaultVM) {
                 Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Box(
-                    Modifier.fillMaxWidth().height(CardStep * (list.size - 1) + CardH)
-                        .graphicsLayer {
-                            cameraDistance = 20f * density
-                            transformOrigin = TransformOrigin(0.5f, 1f)
-                            rotationX = vm.tiltDeg.toFloat()
-                        }
-                ) {
+                Box(Modifier.fillMaxWidth().height(CardStep * (list.size - 1) + CardH)) {
                     list.forEachIndexed { i, d ->
                         key(d.id) {
                             StackCard(
