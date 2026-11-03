@@ -356,8 +356,8 @@ class VaultVM(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             merging = true
             val app = getApplication<Application>()
-            val name = items.joinToString(" + ") { it.title }
-                .replace(Regex("[^A-Za-z0-9 _+-]"), "").trim().take(50).ifEmpty { "Merged documents" }
+            val name = "Docs " + java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy HH.mm"))
             val out = File(app.cacheDir, "share").apply { mkdirs() }.let { dir ->
                 dir.listFiles()?.forEach { it.delete() }
                 File(dir, "$name.pdf")

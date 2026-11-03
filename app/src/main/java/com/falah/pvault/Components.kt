@@ -59,7 +59,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlin.math.abs
 
 val CardH = 190.dp
-val CardStep = 72.dp
+val CardStep = 92.dp
 
 /** Press-and-hold tilt: the card leans toward the finger. Doesn't consume touches, so swipes still work. */
 fun Modifier.pressTilt(): Modifier = composed {

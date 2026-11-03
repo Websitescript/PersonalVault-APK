@@ -149,7 +149,7 @@ fun SettingsScreen(vm: VaultVM) {
             Text("Restoring adds missing documents; it never deletes or overwrites the ones you already have.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             SectionTitle("About")
-            Text("Personal Vault V1.5", fontWeight = FontWeight.Medium)
+            Text("Personal Vault V1.6", fontWeight = FontWeight.Medium)
             Text(
                 "Documents are stored only on this phone, in the app's private storage. Share a PDF or photo from WhatsApp or Files to this app to add it quickly.",
                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
